@@ -15,7 +15,7 @@ response = requests.post("http://localhost:8000/api/v1/bulk-apply",
 status = requests.get("http://localhost:8000/api/v1/application-status")
 print(status.json())
 
-### Run Docker
+# Run Docker
 # Start all services
 docker-compose up -d
 
