@@ -15,30 +15,27 @@ An automated system for bulk-applying to LinkedIn jobs with intelligent resume t
 
 ## System Architecture
 
-```plantuml
-@startuml
-package "LinkedinJobApplier" {
-  [FastAPI Server] as API
-  [Redis Cache] as Redis
-  [PostgreSQL] as DB
-  [Jaeger Tracing] as Jaeger
-  
-  database "Job Queue" as Queue
-  
-  [LinkedIn Scraper] as Scraper
-  [Resume Tailor] as Tailor
-  [Job Applier] as Applier
-  
-  API --> Queue : Enqueues jobs
-  Queue --> Scraper : Triggers search
-  Scraper --> Tailor : Sends job details
-  Tailor --> Applier : Sends tailored resume
-  
-  API --> Redis : Rate limiting
-  API --> DB : Stores status
-  API --> Jaeger : Sends traces
-}
-@enduml
+```mermaid
+graph TD
+    subgraph LinkedinJobApplier
+        API[FastAPI Server]
+        Redis[Redis Cache]
+        DB[(PostgreSQL)]
+        Jaeger[Jaeger Tracing]
+        Queue[(Job Queue)]
+        Scraper[LinkedIn Scraper]
+        Tailor[Resume Tailor]
+        Applier[Job Applier]
+
+        API -->|Enqueues jobs| Queue
+        Queue -->|Triggers search| Scraper
+        Scraper -->|Sends job details| Tailor
+        Tailor -->|Sends tailored resume| Applier
+        
+        API -->|Rate limiting| Redis
+        API -->|Stores status| DB
+        API -->|Sends traces| Jaeger
+    end
 ```
 
 ## Installation
@@ -106,32 +103,31 @@ open http://localhost:16686
 
 ## Flow of Execution
 
-```plantuml
-@startuml
-actor User
-participant "FastAPI" as API
-participant "Rate Limiter" as RL
-participant "LinkedIn Scraper" as LS
-participant "Resume Tailor" as RT
-participant "Job Applier" as JA
-database "PostgreSQL" as DB
-database "Redis" as R
+```mermaid
+sequenceDiagram
+    actor User
+    participant API as FastAPI
+    participant RL as Rate Limiter
+    participant LS as LinkedIn Scraper
+    participant RT as Resume Tailor
+    participant JA as Job Applier
+    participant DB as PostgreSQL
+    participant R as Redis
 
-User -> API: POST /bulk-apply
-API -> RL: Check limits
-RL -> R: Verify quota
-API -> LS: Search jobs
-LS --> API: Job listings
-API -> DB: Create pending entries
-loop For each job
-    API -> RT: Tailor resume
-    RT --> API: Tailored resume
-    API -> JA: Submit application
-    JA --> API: Application result
-    API -> DB: Update status
-end
-API --> User: Process started
-@enduml
+    User->>API: POST /bulk-apply
+    API->>RL: Check limits
+    RL->>R: Verify quota
+    API->>LS: Search jobs
+    LS-->>API: Job listings
+    API->>DB: Create pending entries
+    loop For each job
+        API->>RT: Tailor resume
+        RT-->>API: Tailored resume
+        API->>JA: Submit application
+        JA-->>API: Application result
+        API->>DB: Update status
+    end
+    API-->>User: Process started
 ```
 
 ## Rate Limits
@@ -142,10 +138,8 @@ API --> User: Process started
 
 ## Requirements
 
-Create a `requirements.txt` file in your project root:
-</augment_code_snippet>
+The following dependencies are required:
 
-<augment_code_snippet path="requirements.txt" mode="EDIT">
 ```txt
 fastapi==0.68.1
 uvicorn==0.15.0
@@ -166,4 +160,3 @@ selenium==4.1.0
 webdriver-manager==3.5.2
 pyyaml==5.4.1
 ```
-</augment_code_snippet>
